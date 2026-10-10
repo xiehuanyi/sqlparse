@@ -800,3 +800,14 @@ def test_strip_ws_removes_trailing_ws_in_groups():  # issue782
                                 strip_whitespace=True)
     expected = '(where foo = bar) from'
     assert formatted == expected
+
+
+@pytest.mark.parametrize('query, expected', [
+    ("SELECT '$name'", r'''$sql = "SELECT '\$name'";'''),
+    ('SELECT $body$text$body$', r'''$sql = "SELECT \$body\$text\$body\$";'''),
+    ('SELECT "$table"', r'''$sql = "SELECT \"\$table\"";'''),
+    ('SELECT 1 /* $name */', r'''$sql = "SELECT 1 /* \$name */";'''),
+    ("SELECT '\\$name'", r'''$sql = "SELECT '\\\$name'";'''),
+])
+def test_php_output_preserves_literal_dollar_signs(query, expected):
+    assert sqlparse.format(query, output_format='php') == expected
